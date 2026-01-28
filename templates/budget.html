@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamento Mensal - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Orçamento Mensal de Compras</h2>
+    <p>Cálculo baseado na demanda mensal e estoque atual dos produtos.</p>
+    
+    <div class="stat-card" style="margin-top: 1.5rem;">
+        <h3>Orçamento Estimado para o Mês</h3>
+        <div class="value">R$ {{ "%.2f"|format(total_budget) }}</div>
+    </div>
+</div>
+
+{% if budget_items %}
+<div class="card">
+    <h3>Detalhamento do Orçamento</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Demanda Mensal</th>
+                <th>Necessário Comprar</th>
+                <th>Preço/Unidade</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in budget_items %}
+            <tr>
+                <td><a href="/product/{{ item.product.id }}" style="color: #3498db; text-decoration: none;">{{ item.product.name }}</a></td>
+                <td>{{ item.product.stock_quantity }}</td>
+                <td>{{ item.product.monthly_demand }}</td>
+                <td>{{ "%.2f"|format(item.quantity_needed) }}</td>
+                <td>R$ {{ "%.2f"|format(item.price) }}</td>
+                <td>R$ {{ "%.2f"|format(item.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background: #f8f9fa;">
+                <td colspan="5" style="text-align: right;">Total:</td>
+                <td>R$ {{ "%.2f"|format(total_budget) }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>✓ Você tem estoque suficiente para este mês! Não é necessário comprar nada no momento.</p>
+</div>
+{% endif %}
+
+<div style="margin-top: 1rem;">
+    <a href="/shopping-list/create" class="btn btn-success">📝 Criar Lista de Compras</a>
+    <a href="/" class="btn">← Voltar</a>
+</div>
+{% endblock %}

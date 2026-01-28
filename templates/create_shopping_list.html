@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Lista de Compras - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Criar Nova Lista de Compras</h2>
+    
+    <form method="POST" action="/shopping-list/create">
+        <div class="form-group">
+            <label for="name">Nome da Lista *</label>
+            <input type="text" id="name" name="name" required placeholder="Ex: Compras de Janeiro">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="auto_add" checked>
+                Adicionar automaticamente produtos que precisam ser comprados
+            </label>
+            <small style="color: #666; display: block; margin-left: 1.5rem;">
+                O sistema adicionará produtos com estoque baixo baseado na demanda semanal
+            </small>
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-success">Criar Lista</button>
+            <a href="/shopping-lists" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>💡 Como funciona</h3>
+    <ul style="margin-left: 2rem; margin-top: 1rem;">
+        <li>Crie uma lista de compras com um nome descritivo</li>
+        <li>Opte por adicionar automaticamente produtos que estão em falta</li>
+        <li>Adicione ou remova itens manualmente conforme necessário</li>
+        <li>Ao concluir a lista, o estoque será atualizado automaticamente</li>
+    </ul>
+</div>
+{% endblock %}

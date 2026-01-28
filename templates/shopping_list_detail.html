@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ shopping_list.name }} - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>{{ shopping_list.name }}</h2>
+        {% if not shopping_list.is_completed %}
+        <form method="POST" action="/shopping-list/{{ shopping_list.id }}/complete" style="display: inline;">
+            <button type="submit" class="btn btn-success" onclick="return confirm('Marcar como concluída? Isso atualizará o estoque.')">
+                ✓ Concluir Compras
+            </button>
+        </form>
+        {% else %}
+        <span class="badge badge-success" style="font-size: 1rem; padding: 0.5rem 1rem;">✓ Concluída</span>
+        {% endif %}
+    </div>
+    
+    <p><strong>Criada em:</strong> {{ shopping_list.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+    <p><strong>Total de Itens:</strong> {{ shopping_list.items|length }}</p>
+    <p><strong>Orçamento Estimado:</strong> R$ {{ "%.2f"|format(shopping_list.calculate_total_budget()) }}</p>
+</div>
+
+{% if shopping_list.items %}
+<div class="card">
+    <h3>Itens da Lista</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Preço/Unidade</th>
+                <th>Total Estimado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in shopping_list.items %}
+            <tr>
+                <td><a href="/product/{{ item.product.id }}" style="color: #3498db; text-decoration: none;">{{ item.product.name }}</a></td>
+                <td>{{ item.quantity }}</td>
+                <td>R$ {{ "%.2f"|format(item.product.get_latest_price()) }}</td>
+                <td>R$ {{ "%.2f"|format(item.quantity * item.product.get_latest_price()) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background: #f8f9fa;">
+                <td colspan="3" style="text-align: right;">Total:</td>
+                <td>R$ {{ "%.2f"|format(shopping_list.calculate_total_budget()) }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>Esta lista está vazia. Adicione produtos abaixo.</p>
+</div>
+{% endif %}
+
+{% if not shopping_list.is_completed and products_not_in_list %}
+<div class="card">
+    <h3>Adicionar Item à Lista</h3>
+    <form method="POST" action="/shopping-list/{{ shopping_list.id }}/add-item">
+        <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end;">
+            <div class="form-group">
+                <label>Produto</label>
+                <select name="product_id" required>
+                    <option value="">Selecione um produto</option>
+                    {% for product in products_not_in_list %}
+                    <option value="{{ product.id }}">
+                        {{ product.name }} 
+                        (Estoque: {{ product.stock_quantity }}, 
+                        {% if product.needs_purchase() %}Precisa Comprar{% else %}OK{% endif %})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" name="quantity" step="0.01" value="1" required>
+            </div>
+            <button type="submit" class="btn btn-success">Adicionar</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<a href="/shopping-lists" class="btn">← Voltar para Listas</a>
+{% endblock %}
