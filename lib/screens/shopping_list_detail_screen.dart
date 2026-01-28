@@ -67,12 +67,19 @@ class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
 
   Future<void> _completeList() async {
     try {
-      // Update stock for each item
+      // First, update database
       for (final itemData in _items) {
         final item = itemData['item'] as ShoppingListItem;
         final product = itemData['product'] as Product;
-        product.stockQuantity += item.quantity;
-        await _dbService.updateProduct(product);
+        final updatedProduct = Product(
+          id: product.id,
+          name: product.name,
+          stockQuantity: product.stockQuantity + item.quantity,
+          weeklyDemand: product.weeklyDemand,
+          monthlyDemand: product.monthlyDemand,
+          createdAt: product.createdAt,
+        );
+        await _dbService.updateProduct(updatedProduct);
       }
 
       // Mark list as completed
