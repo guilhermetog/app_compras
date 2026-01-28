@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Listas de Compras - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Listas de Compras</h2>
+        <a href="/shopping-list/create" class="btn btn-success">➕ Nova Lista</a>
+    </div>
+    
+    {% if lists %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Criada em</th>
+                <th>Itens</th>
+                <th>Orçamento Estimado</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for list in lists %}
+            <tr>
+                <td><strong>{{ list.name }}</strong></td>
+                <td>{{ list.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ list.items|length }} itens</td>
+                <td>R$ {{ "%.2f"|format(list.calculate_total_budget()) }}</td>
+                <td>
+                    {% if list.is_completed %}
+                        <span class="badge badge-success">✓ Concluída</span>
+                    {% else %}
+                        <span class="badge badge-warning">Pendente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/shopping-list/{{ list.id }}" class="btn btn-small">Ver Detalhes</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhuma lista de compras criada ainda.</p>
+    <a href="/shopping-list/create" class="btn btn-success" style="margin-top: 1rem;">➕ Criar Primeira Lista</a>
+    {% endif %}
+</div>
+{% endblock %}

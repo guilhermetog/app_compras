@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Produto - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Adicionar Novo Produto</h2>
+    
+    <form method="POST" action="/product/add">
+        <div class="form-group">
+            <label for="name">Nome do Produto *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="stock_quantity">Quantidade em Estoque</label>
+            <input type="number" id="stock_quantity" name="stock_quantity" step="0.01" value="0">
+        </div>
+        
+        <div class="form-group">
+            <label for="weekly_demand">Demanda Semanal (unidades por semana)</label>
+            <input type="number" id="weekly_demand" name="weekly_demand" step="0.01" value="0">
+            <small style="color: #666;">Quanto você consome por semana</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="monthly_demand">Demanda Mensal (unidades por mês)</label>
+            <input type="number" id="monthly_demand" name="monthly_demand" step="0.01" value="0">
+            <small style="color: #666;">Quanto você consome por mês</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="price">Preço Unitário Inicial (R$)</label>
+            <input type="number" id="price" name="price" step="0.01">
+            <small style="color: #666;">Opcional - para calcular orçamento</small>
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-success">Adicionar Produto</button>
+            <a href="/products" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>💡 Dicas</h3>
+    <ul style="margin-left: 2rem; margin-top: 1rem;">
+        <li>O <strong>nome do produto</strong> deve ser único no sistema</li>
+        <li>Configure a <strong>demanda semanal/mensal</strong> para receber alertas de reabastecimento</li>
+        <li>O sistema calculará automaticamente quando o produto está em falta</li>
+        <li>Você pode atualizar essas informações depois nos detalhes do produto</li>
+    </ul>
+</div>
+{% endblock %}

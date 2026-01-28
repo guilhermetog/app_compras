@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>{{ product.name }}</h2>
+        {% if product.needs_purchase() %}
+            <span class="badge badge-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">⚠️ Precisa Comprar</span>
+        {% else %}
+            <span class="badge badge-success" style="font-size: 1rem; padding: 0.5rem 1rem;">✓ Estoque OK</span>
+        {% endif %}
+    </div>
+    
+    <div class="grid">
+        <div>
+            <h3>Informações do Estoque</h3>
+            <p><strong>Quantidade em Estoque:</strong> {{ product.stock_quantity }}</p>
+            <p><strong>Demanda Semanal:</strong> {{ product.weekly_demand }}</p>
+            <p><strong>Demanda Mensal:</strong> {{ product.monthly_demand }}</p>
+            <p><strong>Preço Atual:</strong> R$ {{ "%.2f"|format(product.get_latest_price()) }}</p>
+            {% if product.predict_shortage() %}
+            <p><strong>Semanas até Acabar:</strong> {{ "%.1f"|format(product.predict_shortage()) }} semanas</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h3>Atualizar Informações</h3>
+            <form method="POST" action="/product/{{ product.id }}/update">
+                <div class="form-group">
+                    <label>Estoque</label>
+                    <input type="number" name="stock_quantity" step="0.01" value="{{ product.stock_quantity }}">
+                </div>
+                <div class="form-group">
+                    <label>Demanda Semanal</label>
+                    <input type="number" name="weekly_demand" step="0.01" value="{{ product.weekly_demand }}">
+                </div>
+                <div class="form-group">
+                    <label>Demanda Mensal</label>
+                    <input type="number" name="monthly_demand" step="0.01" value="{{ product.monthly_demand }}">
+                </div>
+                <button type="submit" class="btn btn-success">Atualizar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Registrar Compra</h3>
+    <form method="POST" action="/product/{{ product.id }}/purchase">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Quantidade Comprada</label>
+                <input type="number" name="quantity" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>Preço por Unidade (R$)</label>
+                <input type="number" name="price_per_unit" step="0.01" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Registrar Compra</button>
+    </form>
+</div>
+
+{% if product.purchase_records %}
+<div class="card">
+    <h3>Histórico de Compras</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Quantidade</th>
+                <th>Preço/Unidade</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in product.purchase_records|reverse %}
+            <tr>
+                <td>{{ record.purchased_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ record.quantity }}</td>
+                <td>R$ {{ "%.2f"|format(record.price_per_unit) }}</td>
+                <td>R$ {{ "%.2f"|format(record.total_price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if product.price_history %}
+<div class="card">
+    <h3>Histórico de Preços</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Preço</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for price in product.price_history|reverse %}
+            <tr>
+                <td>{{ price.recorded_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>R$ {{ "%.2f"|format(price.price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<a href="/products" class="btn">← Voltar para Produtos</a>
+{% endblock %}

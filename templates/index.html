@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Início - App Compras{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <div class="stat-card">
+        <h3>Total de Produtos</h3>
+        <div class="value">{{ products|length }}</div>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <h3>Produtos em Falta</h3>
+        <div class="value">{{ products|selectattr('needs_purchase')|list|length }}</div>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h3>Estoque Total</h3>
+        <div class="value">{{ products|sum(attribute='stock_quantity')|round|int }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Bem-vindo ao App de Gestão de Compras</h2>
+    <p>Este aplicativo ajuda você a gerenciar seus produtos e planejar suas compras mensais.</p>
+    
+    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Principais Funcionalidades:</h3>
+    <ul style="margin-left: 2rem;">
+        <li><strong>Gerenciamento de Produtos:</strong> Adicione e acompanhe produtos com histórico de preços e demanda</li>
+        <li><strong>Controle de Estoque:</strong> Monitore quantidade em estoque e previsão de falta</li>
+        <li><strong>Listas de Compras:</strong> Crie listas inteligentes baseadas na demanda e estoque</li>
+        <li><strong>Orçamento Mensal:</strong> Calcule o orçamento necessário para suas compras</li>
+        <li><strong>Alertas:</strong> Receba avisos sobre produtos que precisam ser reabastecidos</li>
+    </ul>
+    
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <a href="/product/add" class="btn btn-success">➕ Adicionar Produto</a>
+        <a href="/shopping-list/create" class="btn">📝 Nova Lista de Compras</a>
+        <a href="/alerts" class="btn btn-danger">⚠️ Ver Alertas</a>
+    </div>
+</div>
+
+{% if products %}
+<div class="card">
+    <h2>Produtos Recentes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Estoque</th>
+                <th>Demanda Semanal</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products[:5] %}
+            <tr>
+                <td><a href="/product/{{ product.id }}" style="color: #3498db; text-decoration: none;">{{ product.name }}</a></td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.weekly_demand }}</td>
+                <td>
+                    {% if product.needs_purchase() %}
+                        <span class="badge badge-danger">Precisa Comprar</span>
+                    {% else %}
+                        <span class="badge badge-success">OK</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <h2>Comece Agora!</h2>
+    <p>Você ainda não tem produtos cadastrados. Adicione seu primeiro produto para começar a gerenciar suas compras.</p>
+    <a href="/product/add" class="btn btn-success" style="margin-top: 1rem;">➕ Adicionar Primeiro Produto</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Todos os Produtos</h2>
+        <a href="/product/add" class="btn btn-success">➕ Adicionar Produto</a>
+    </div>
+    
+    {% if products %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Estoque</th>
+                <th>Demanda Semanal</th>
+                <th>Demanda Mensal</th>
+                <th>Preço Atual</th>
+                <th>Semanas Restantes</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td><strong>{{ product.name }}</strong></td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.weekly_demand }}</td>
+                <td>{{ product.monthly_demand }}</td>
+                <td>R$ {{ "%.2f"|format(product.get_latest_price()) }}</td>
+                <td>
+                    {% if product.predict_shortage() %}
+                        {{ "%.1f"|format(product.predict_shortage()) }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if product.needs_purchase() %}
+                        <span class="badge badge-danger">⚠️ Precisa Comprar</span>
+                    {% elif product.predict_shortage() and product.predict_shortage() < 4 %}
+                        <span class="badge badge-warning">⚡ Atenção</span>
+                    {% else %}
+                        <span class="badge badge-success">✓ OK</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/product/{{ product.id }}" class="btn btn-small">Ver Detalhes</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Nenhum produto cadastrado ainda.</p>
+    <a href="/product/add" class="btn btn-success" style="margin-top: 1rem;">➕ Adicionar Primeiro Produto</a>
+    {% endif %}
+</div>
+{% endblock %}

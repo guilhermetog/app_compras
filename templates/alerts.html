@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Alertas - App Compras{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>⚠️ Alertas de Estoque</h2>
+    <p>Produtos que precisam ser reabastecidos em breve.</p>
+</div>
+
+{% if products %}
+<div class="card">
+    <h3>Produtos com Estoque Baixo</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Demanda Semanal</th>
+                <th>Semanas Restantes</th>
+                <th>Urgência</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td><strong>{{ product.name }}</strong></td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.weekly_demand }}</td>
+                <td>
+                    {% if product.predict_shortage() %}
+                        {{ "%.1f"|format(product.predict_shortage()) }} semanas
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% set weeks = product.predict_shortage() %}
+                    {% if weeks and weeks < 1 %}
+                        <span class="badge badge-danger">🔴 Crítico</span>
+                    {% elif weeks and weeks < 2 %}
+                        <span class="badge badge-danger">⚠️ Urgente</span>
+                    {% else %}
+                        <span class="badge badge-warning">⚡ Atenção</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/product/{{ product.id }}" class="btn btn-small">Ver Detalhes</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 1.5rem;">
+        <a href="/shopping-list/create" class="btn btn-success">📝 Criar Lista de Compras</a>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <h3>✓ Tudo Certo!</h3>
+    <p>Não há produtos com estoque baixo no momento. Todos os seus produtos estão bem abastecidos.</p>
+</div>
+{% endif %}
+
+<div style="margin-top: 1rem;">
+    <a href="/" class="btn">← Voltar</a>
+</div>
+{% endblock %}
