@@ -63,15 +63,29 @@ cd app_compras
 pip install -r requirements.txt
 ```
 
-3. Execute o aplicativo:
+3. (Opcional) Configure variáveis de ambiente:
+```bash
+export SECRET_KEY="sua-chave-secreta-aqui"
+export FLASK_DEBUG=true  # Apenas para desenvolvimento
+```
+
+4. Execute o aplicativo:
 ```bash
 python app.py
 ```
 
-4. Acesse no navegador:
+5. Acesse no navegador:
 ```
 http://localhost:5000
 ```
+
+### Configuração de Produção
+
+Para ambientes de produção, configure as seguintes variáveis de ambiente:
+- `SECRET_KEY`: Chave secreta para sessões (obrigatório)
+- `FLASK_DEBUG`: False (padrão)
+- `FLASK_HOST`: 0.0.0.0 (padrão)
+- `FLASK_PORT`: 5000 (padrão)
 
 ## 📖 Como Usar
 
@@ -185,6 +199,19 @@ O sistema já possui endpoints API REST que podem ser consumidos por aplicativos
 
 - `GET /api/products` - Lista de produtos com status
 - `GET /api/alerts` - Produtos que precisam de compra
+
+## 🔒 Segurança
+
+O aplicativo implementa várias camadas de segurança:
+
+- ✅ Validação de entrada em todos os formulários
+- ✅ Proteção contra valores negativos/inválidos
+- ✅ Tratamento de erros de banco de dados com rollback
+- ✅ Configuração segura via variáveis de ambiente
+- ✅ SECRET_KEY configurável (não hardcoded)
+- ✅ Debug mode desabilitado por padrão em produção
+
+**Nota**: Para uso em produção, sempre configure uma SECRET_KEY forte e única através de variáveis de ambiente.
 
 ## 🔮 Possíveis Melhorias Futuras
 
