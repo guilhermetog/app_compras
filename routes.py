@@ -2,12 +2,17 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db, Product, PurchaseRecord, PriceHistory, ShoppingList, ShoppingListItem
 from datetime import datetime
 
+# Constants
+DEFAULT_WEEKS_THRESHOLD = 2  # Alert threshold for low stock (weeks)
+WEEKS_TO_STOCK = 4  # Default weeks of stock to maintain
+
 
 @app.route('/')
 def index():
     """Home page showing all products."""
     products = Product.query.all()
-    return render_template('index.html', products=products)
+    low_stock_count = sum(1 for p in products if p.needs_purchase())
+    return render_template('index.html', products=products, low_stock_count=low_stock_count)
 
 
 @app.route('/products')
@@ -21,10 +26,26 @@ def products():
 def add_product():
     """Add a new product."""
     if request.method == 'POST':
-        name = request.form.get('name')
-        stock_quantity = float(request.form.get('stock_quantity', 0))
-        weekly_demand = float(request.form.get('weekly_demand', 0))
-        monthly_demand = float(request.form.get('monthly_demand', 0))
+        name = request.form.get('name', '').strip()
+        
+        # Validate name
+        if not name:
+            flash('Nome do produto é obrigatório!', 'error')
+            return redirect(url_for('add_product'))
+        
+        # Validate numeric inputs
+        try:
+            stock_quantity = float(request.form.get('stock_quantity', 0))
+            weekly_demand = float(request.form.get('weekly_demand', 0))
+            monthly_demand = float(request.form.get('monthly_demand', 0))
+            
+            if stock_quantity < 0 or weekly_demand < 0 or monthly_demand < 0:
+                flash('Valores não podem ser negativos!', 'error')
+                return redirect(url_for('add_product'))
+        except (ValueError, TypeError):
+            flash('Valores inválidos fornecidos!', 'error')
+            return redirect(url_for('add_product'))
+        
         initial_price = request.form.get('price')
         
         # Check if product already exists
@@ -33,27 +54,41 @@ def add_product():
             flash(f'Produto "{name}" já existe!', 'error')
             return redirect(url_for('add_product'))
         
-        # Create new product
-        product = Product(
-            name=name,
-            stock_quantity=stock_quantity,
-            weekly_demand=weekly_demand,
-            monthly_demand=monthly_demand
-        )
-        db.session.add(product)
-        db.session.commit()
-        
-        # Add initial price if provided
-        if initial_price:
-            price_history = PriceHistory(
-                product_id=product.id,
-                price=float(initial_price)
+        try:
+            # Create new product
+            product = Product(
+                name=name,
+                stock_quantity=stock_quantity,
+                weekly_demand=weekly_demand,
+                monthly_demand=monthly_demand
             )
-            db.session.add(price_history)
+            db.session.add(product)
             db.session.commit()
-        
-        flash(f'Produto "{name}" adicionado com sucesso!', 'success')
-        return redirect(url_for('products'))
+            
+            # Add initial price if provided
+            if initial_price:
+                try:
+                    price_value = float(initial_price)
+                    if price_value < 0:
+                        flash('Preço não pode ser negativo!', 'error')
+                        return redirect(url_for('add_product'))
+                    
+                    price_history = PriceHistory(
+                        product_id=product.id,
+                        price=price_value
+                    )
+                    db.session.add(price_history)
+                    db.session.commit()
+                except (ValueError, TypeError):
+                    flash('Preço inválido!', 'error')
+                    return redirect(url_for('add_product'))
+            
+            flash(f'Produto "{name}" adicionado com sucesso!', 'success')
+            return redirect(url_for('products'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao adicionar produto: {str(e)}', 'error')
+            return redirect(url_for('add_product'))
     
     return render_template('add_product.html')
 
@@ -70,15 +105,36 @@ def update_product(product_id):
     """Update product stock and demand."""
     product = Product.query.get_or_404(product_id)
     
-    if 'stock_quantity' in request.form:
-        product.stock_quantity = float(request.form.get('stock_quantity'))
-    if 'weekly_demand' in request.form:
-        product.weekly_demand = float(request.form.get('weekly_demand'))
-    if 'monthly_demand' in request.form:
-        product.monthly_demand = float(request.form.get('monthly_demand'))
+    try:
+        if 'stock_quantity' in request.form:
+            stock_quantity = float(request.form.get('stock_quantity'))
+            if stock_quantity < 0:
+                flash('Estoque não pode ser negativo!', 'error')
+                return redirect(url_for('product_detail', product_id=product_id))
+            product.stock_quantity = stock_quantity
+            
+        if 'weekly_demand' in request.form:
+            weekly_demand = float(request.form.get('weekly_demand'))
+            if weekly_demand < 0:
+                flash('Demanda não pode ser negativa!', 'error')
+                return redirect(url_for('product_detail', product_id=product_id))
+            product.weekly_demand = weekly_demand
+            
+        if 'monthly_demand' in request.form:
+            monthly_demand = float(request.form.get('monthly_demand'))
+            if monthly_demand < 0:
+                flash('Demanda não pode ser negativa!', 'error')
+                return redirect(url_for('product_detail', product_id=product_id))
+            product.monthly_demand = monthly_demand
+        
+        db.session.commit()
+        flash(f'Produto "{product.name}" atualizado!', 'success')
+    except (ValueError, TypeError):
+        flash('Valores inválidos fornecidos!', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao atualizar produto: {str(e)}', 'error')
     
-    db.session.commit()
-    flash(f'Produto "{product.name}" atualizado!', 'success')
     return redirect(url_for('product_detail', product_id=product_id))
 
 
@@ -87,31 +143,43 @@ def record_purchase(product_id):
     """Record a purchase for a product."""
     product = Product.query.get_or_404(product_id)
     
-    quantity = float(request.form.get('quantity'))
-    price_per_unit = float(request.form.get('price_per_unit'))
-    total_price = quantity * price_per_unit
+    try:
+        quantity = float(request.form.get('quantity'))
+        price_per_unit = float(request.form.get('price_per_unit'))
+        
+        if quantity <= 0 or price_per_unit < 0:
+            flash('Quantidade deve ser positiva e preço não pode ser negativo!', 'error')
+            return redirect(url_for('product_detail', product_id=product_id))
+        
+        total_price = quantity * price_per_unit
+        
+        # Create purchase record
+        purchase = PurchaseRecord(
+            product_id=product_id,
+            quantity=quantity,
+            price_per_unit=price_per_unit,
+            total_price=total_price
+        )
+        db.session.add(purchase)
+        
+        # Update stock
+        product.stock_quantity += quantity
+        
+        # Add to price history
+        price_history = PriceHistory(
+            product_id=product_id,
+            price=price_per_unit
+        )
+        db.session.add(price_history)
+        
+        db.session.commit()
+        flash(f'Compra registrada para "{product.name}"!', 'success')
+    except (ValueError, TypeError):
+        flash('Valores inválidos fornecidos!', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao registrar compra: {str(e)}', 'error')
     
-    # Create purchase record
-    purchase = PurchaseRecord(
-        product_id=product_id,
-        quantity=quantity,
-        price_per_unit=price_per_unit,
-        total_price=total_price
-    )
-    db.session.add(purchase)
-    
-    # Update stock
-    product.stock_quantity += quantity
-    
-    # Add to price history
-    price_history = PriceHistory(
-        product_id=product_id,
-        price=price_per_unit
-    )
-    db.session.add(price_history)
-    
-    db.session.commit()
-    flash(f'Compra registrada para "{product.name}"!', 'success')
     return redirect(url_for('product_detail', product_id=product_id))
 
 
@@ -139,10 +207,10 @@ def create_shopping_list():
             products = Product.query.all()
             for product in products:
                 if product.needs_purchase():
-                    # Calculate quantity needed for 4 weeks
+                    # Calculate quantity needed for WEEKS_TO_STOCK weeks
                     shortage = product.predict_shortage()
                     if shortage is not None:
-                        quantity_needed = max(0, (4 * product.weekly_demand) - product.stock_quantity)
+                        quantity_needed = max(0, (WEEKS_TO_STOCK * product.weekly_demand) - product.stock_quantity)
                         if quantity_needed > 0:
                             item = ShoppingListItem(
                                 shopping_list_id=shopping_list.id,
