@@ -1,6 +1,6 @@
 # App de Gestão de Compras 🛒
 
-Aplicativo web para gerenciamento de produtos e planejamento de compras mensais. Sistema data-driven com persistência em banco de dados SQLite.
+**Aplicativo mobile** para gerenciamento de produtos e planejamento de compras mensais. Desenvolvido em **Flutter** com interface elegante e moderna. Sistema data-driven com persistência em banco de dados SQLite.
 
 ## 📋 Funcionalidades
 
@@ -47,8 +47,9 @@ Aplicativo web para gerenciamento de produtos e planejamento de compras mensais.
 ## 🚀 Instalação e Execução
 
 ### Requisitos
-- Python 3.8 ou superior
-- pip (gerenciador de pacotes Python)
+- Flutter SDK 3.0.0 ou superior
+- Android Studio / Xcode (para desenvolvimento Android/iOS)
+- Dispositivo móvel ou emulador
 
 ### Passo a Passo
 
@@ -58,34 +59,41 @@ git clone https://github.com/guilhermetog/app_compras.git
 cd app_compras
 ```
 
-2. Instale as dependências:
+2. Instale as dependências do Flutter:
+```bash
+flutter pub get
+```
+
+3. Execute o aplicativo:
+
+**No emulador/dispositivo Android:**
+```bash
+flutter run
+```
+
+**No emulador/dispositivo iOS (macOS apenas):**
+```bash
+flutter run -d ios
+```
+
+**Gerar APK para Android:**
+```bash
+flutter build apk --release
+```
+
+**Gerar IPA para iOS:**
+```bash
+flutter build ios --release
+```
+
+### Versão Web Legada (Flask)
+
+Uma versão web anterior em Flask está preservada nos arquivos `app.py`, `routes.py` e `templates/`. Para executá-la:
+
 ```bash
 pip install -r requirements.txt
-```
-
-3. (Opcional) Configure variáveis de ambiente:
-```bash
-export SECRET_KEY="sua-chave-secreta-aqui"
-export FLASK_DEBUG=true  # Apenas para desenvolvimento
-```
-
-4. Execute o aplicativo:
-```bash
 python app.py
 ```
-
-5. Acesse no navegador:
-```
-http://localhost:5000
-```
-
-### Configuração de Produção
-
-Para ambientes de produção, configure as seguintes variáveis de ambiente:
-- `SECRET_KEY`: Chave secreta para sessões (obrigatório)
-- `FLASK_DEBUG`: False (padrão)
-- `FLASK_HOST`: 0.0.0.0 (padrão)
-- `FLASK_PORT`: 5000 (padrão)
 
 ## 📖 Como Usar
 
@@ -131,10 +139,36 @@ Para ambientes de produção, configure as seguintes variáveis de ambiente:
 ## 🏗️ Arquitetura
 
 ### Tecnologias
-- **Backend**: Python Flask
-- **Banco de Dados**: SQLite com SQLAlchemy ORM
-- **Frontend**: HTML5 + CSS3 (responsivo)
+- **Framework**: Flutter 3.0+
+- **Linguagem**: Dart
+- **Banco de Dados**: SQLite com sqflite package
+- **UI**: Material Design
+- **Plataformas**: Android e iOS
 - **Persistência**: Data-driven com modelos relacionais
+
+### Estrutura do Projeto
+
+```
+lib/
+├── main.dart                 # Ponto de entrada da aplicação
+├── models/                   # Modelos de dados
+│   ├── product.dart
+│   ├── purchase_record.dart
+│   ├── price_history.dart
+│   └── shopping_list.dart
+├── screens/                  # Telas do aplicativo
+│   ├── home_screen.dart
+│   ├── products_screen.dart
+│   ├── add_product_screen.dart
+│   ├── product_detail_screen.dart
+│   ├── shopping_lists_screen.dart
+│   ├── create_shopping_list_screen.dart
+│   ├── shopping_list_detail_screen.dart
+│   ├── budget_screen.dart
+│   └── alerts_screen.dart
+└── services/                 # Serviços e lógica de negócio
+    └── database_service.dart
+```
 
 ### Modelos de Dados
 
@@ -193,12 +227,21 @@ def needs_purchase(self, weeks_threshold=2):
     return shortage < weeks_threshold
 ```
 
-## 📱 Expansão Mobile
+## 📱 Características Mobile
 
-O sistema já possui endpoints API REST que podem ser consumidos por aplicativos mobile:
+### Interface Moderna
+- Design elegante baseado em Material Design
+- Navegação intuitiva com bottom navigation bar
+- Animações fluidas e responsivas
+- Temas e cores consistentes
 
-- `GET /api/products` - Lista de produtos com status
-- `GET /api/alerts` - Produtos que precisam de compra
+### Funcionalidades Mobile
+- **Pull-to-refresh** em todas as listas
+- **Gestos nativos** (long press para deletar)
+- **Formulários validados** com feedback imediato
+- **Diálogos e bottom sheets** para interações rápidas
+- **Navegação stack-based** com transições suaves
+- **Ícones e badges** para status visual
 
 ## 🔒 Segurança
 
@@ -215,14 +258,18 @@ O aplicativo implementa várias camadas de segurança:
 
 ## 🔮 Possíveis Melhorias Futuras
 
-- [ ] Integração com API pública de produtos (Google Shopping, etc)
+- [ ] Sincronização em nuvem (Firebase/Supabase)
+- [ ] Compartilhamento de listas entre usuários
+- [ ] Integração com API pública de produtos
 - [ ] Categorização de produtos
 - [ ] Gráficos de consumo e tendências
-- [ ] Notificações push/email para alertas
-- [ ] Múltiplos usuários e autenticação
-- [ ] Exportar listas para PDF/Excel
-- [ ] Código de barras/QR code para produtos
+- [ ] Notificações push para alertas
+- [ ] Autenticação e múltiplos usuários
+- [ ] Exportar listas para PDF
+- [ ] Scanner de código de barras
 - [ ] Comparação de preços entre compras
+- [ ] Modo escuro (dark mode)
+- [ ] Suporte a múltiplos idiomas
 
 ## 📄 Licença
 
